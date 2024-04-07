@@ -1,4 +1,4 @@
-import json, pathlib
+import json,pathlib
 from tkinter import filedialog
 from tkinter import *
 
@@ -9,16 +9,14 @@ openwindow=Tk()
 openwindow.title('')
 streamfontfile = filedialog.askopenfilename(initialdir=pathlib.Path,title="Browse the cooked fonts", filetypes=(("UbiArt Font",'.tfn.ckd'),('allfiles','*.*')))
 openwindow.destroy()
-selectidchar = 0
-lastchar = 1
 jsonload1 = json.load(open(streamfontfile,'r'))
-bfmcwriter = open('open.bmfc','w')
+bfmcwriter = open('bmfont.bmfc','w')
 bfmcwriter.write('''# AngelCode Bitmap Font Generator configuration file
 fileVersion=1
 
 # font settings
-fontName=Noto Sans CJK Bold
-fontFile=New folder/Font/JustDance-Bold.otf
+fontName=
+fontFile=
 charSet=0
 fontSize=250
 aa=1
@@ -70,36 +68,74 @@ outlineThickness=0
 
 # selected chars
 chars=''')
-addchar = 0
+addchar = 0 # overall character
 selectidchar = jsonload1["chars"][0]["id"]
 log=""
-print("Generating Fonts...")
-for id in jsonload1["chars"]:
-    selectidchar+=1
-    mainchar = id["id"]
-    if id["id"] == selectidchar:
-        if addchar == 0:
-            domainchar = id["id"]
-        addchar+=1
-        log = log+'1 addchar:'+ str(addchar)+' mainchar: '+ str(mainchar)+' lastchar '+ str(lastchar)+' selected char: '+ str(selectidchar)+'\n'
-    else:
-        selectidchar = id["id"]
-        if addchar == 0:
-            if selectidchar == id["id"]:
-                domainchar = id["id"]
-            bfmcwriter.write(str(id["id"])+",")
-            addchar = 0
-            log = log+'2 addchar:'+ str(addchar)+' mainchar: '+ str(mainchar)+' lastchar '+ str(lastchar)+' selected char: '+ str(selectidchar)+'\n'
-        else:
-            bfmcwriter.write(str(domainchar)+"-"+str(mainchar)+',')
-            addchar = 0
-            log = log+'3 addchar:'+ str(addchar)+' mainchar: '+ str(mainchar)+' lastchar '+ str(lastchar)+' selected char: '+ str(selectidchar)+'\n'
-    lastchar+=1
+nextcharac = 0
+ckecker = 0
+for id2 in jsonload1["chars"]:
+    ckecker+=1
+print("Loading Id's")
 logs=open('logs.txt','w')
-logs.write(log)
+countchars=0
+print("Writing...")
+for id in jsonload1["chars"]:
+    nextcharac+=1 # integer next value
+    maincharacter=id["id"] # main character value
+    if ckecker == nextcharac:
+        if countchars==13:
+            bfmcwriter.write('\nchars=')
+            bfmcwriter.write(str(maincharacter)) # if last list chars and end of value
+            logs.write("chars added")
+            countchars=0
+        else:
+            bfmcwriter.write(str(maincharacter)) # if end of value
+        logs.write(str(maincharacter)+": End Value\n")
+    else:
+        nextcharacter=jsonload1["chars"][nextcharac]["id"] # next charcter value
+        if addchar == 0:
+            if int(maincharacter+1) == nextcharacter:
+                if countchars==13:
+                    bfmcwriter.write('\nchars=')
+                    bfmcwriter.write(str(maincharacter)+"-") # if last list chars and new increase of value
+                    logs.write("\nChars list added\n")
+                    countchars=0
+                else:
+                    bfmcwriter.write(str(maincharacter)+"-") # if new increase in next value
+                addchar+=1
+                logs.write(str(maincharacter)+": New Increase Value\n")
+            else:
+                if countchars==13:
+                    bfmcwriter.write('\nchars=')
+                    bfmcwriter.write(str(maincharacter)+",") # if end of value
+                    logs.write("\nChars list added\n")
+                    countchars=0
+                else:
+                    if countchars==12:
+                        bfmcwriter.write(str(maincharacter)) # if last list chars and not same number in next value
+                    else:
+                        bfmcwriter.write(str(maincharacter)+",") # if not same number in next value
+                addchar=0
+                logs.write(str(maincharacter)+": New Value\n")
+                countchars+=1
+        else:
+            if int(maincharacter+1) == nextcharacter: 
+                addchar+=1 # if same value again
+                logs.write(str(maincharacter)+": Next Value\n")
+            else:
+                if countchars==12:
+                    bfmcwriter.write(str(maincharacter)) # if last list chars and last overall value
+                else:
+                    bfmcwriter.write(str(maincharacter)+",") # if last overall value
+                countchars+=1
+                addchar=0
+                logs.write(str(maincharacter)+": Last Value\n")
+    logs.write('\nIds :'+str(maincharacter)+"\n ")
 bfmcwriter.write('''
 
 # imported icon images''')
 print('\n   Done!\n')
 input('Press enter to exit')
+
+
     
